@@ -1,2 +1,2 @@
-# rest-web-sockets-with-go
+# Project Golang
 Rest and Web Sockets using Golang
