@@ -33,7 +33,7 @@ func CheckAuthMiddleware(s server.Server) func(h http.Handler) http.Handler {
 				return
 			}
 			tokenString := strings.TrimSpace(r.Header.Get("Authorization"))
-			_, err := jwt.ParseWithClaims(tokenString, models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			_, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte(s.Config().JWTSecret), nil
 			})
 			if err != nil {
