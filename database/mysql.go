@@ -76,6 +76,11 @@ func (m *MySQLRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 	return &user, nil
 }
 
+func (m *MySQLRepository) InsertPost(ctx context.Context, post *models.Post) error {
+	_, err := m.db.ExecContext(ctx, "INSERT INTO posts (id, title, content, user_id) VALUES (?, ?, ?, ?)", post.ID, post.Title, post.Content, post.UserID)
+	return err
+}
+
 func (m *MySQLRepository) Close() error {
 	return m.db.Close()
 }
