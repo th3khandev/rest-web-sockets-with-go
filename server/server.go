@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/th3khan/rest-web-sockets-with-go/database"
+	"github.com/th3khan/rest-web-sockets-with-go/repositories"
 )
 
 type Config struct {
@@ -48,6 +50,14 @@ func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	b.router = mux.NewRouter()
 	binder(b, b.router)
+
+	repo, err := database.NewMySQLRepository(b.config.DataBaseUrl)
+	if err != nil {
+		log.Fatal("Error", err)
+	}
+
+	repositories.SetRepository(repo)
+
 	log.Println("Starting server on Port", b.config.Port)
 
 	if err := http.ListenAndServe(b.config.Port, b.router); err != nil {

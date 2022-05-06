@@ -25,7 +25,7 @@ func NewMySQLRepository(url string) (*MySQLRepository, error) {
 }
 
 func (m *MySQLRepository) InsertUser(ctx context.Context, user *models.User) error {
-	_, err := m.db.ExecContext(ctx, "INSERT INTO users (email, password) VALUES (?, ?)", user.Email, user.Password)
+	_, err := m.db.ExecContext(ctx, "INSERT INTO users (id, email, password) VALUES (?, ?, ?)", user.ID, user.Email, user.Password)
 	return err
 }
 
