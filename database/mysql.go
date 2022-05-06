@@ -27,7 +27,7 @@ func (m *MySQLRepository) InsertUser(ctx context.Context, user *models.User) err
 	return err
 }
 
-func (m *MySQLRepository) GetUserById(ctx context.Context, id int) (*models.User, error) {
+func (m *MySQLRepository) GetUserById(ctx context.Context, id string) (*models.User, error) {
 	rows, err := m.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = ?", id)
 
 	defer func() {
