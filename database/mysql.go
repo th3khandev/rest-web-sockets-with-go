@@ -52,6 +52,29 @@ func (m *MySQLRepository) GetUserById(ctx context.Context, id string) (*models.U
 
 	return &user, nil
 }
+func (m *MySQLRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	rows, err := m.db.QueryContext(ctx, "SELECT id, email, password FROM users WHERE email = ?", email)
+
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	var user models.User
+	for rows.Next() {
+		if err = rows.Scan(&user.ID, &user.Email, &user.Password); err == nil {
+			return &user, nil
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
 
 func (m *MySQLRepository) Close() error {
 	return m.db.Close()
