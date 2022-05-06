@@ -8,6 +8,11 @@ import (
 	"github.com/th3khan/rest-web-sockets-with-go/models"
 	"github.com/th3khan/rest-web-sockets-with-go/repositories"
 	"github.com/th3khan/rest-web-sockets-with-go/server"
+	"golang.org/x/crypto/bcrypt"
+)
+
+const (
+	HASH_COST = 8
 )
 
 type SignUpRequest struct {
@@ -28,6 +33,13 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), HASH_COST)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		id, err := ksuid.NewRandom()
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,7 +48,7 @@ func SignUpHandler(s server.Server) http.HandlerFunc {
 		user := models.User{
 			ID:       id.String(),
 			Email:    request.Email,
-			Password: request.Password,
+			Password: string(hashedPassword),
 		}
 
 		err = repositories.InsertUser(r.Context(), &user)
