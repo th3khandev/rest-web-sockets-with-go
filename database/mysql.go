@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"log"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/th3khan/rest-web-sockets-with-go/models"
 )
 
