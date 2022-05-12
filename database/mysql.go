@@ -106,6 +106,11 @@ func (m *MySQLRepository) UpdatePost(ctx context.Context, post *models.Post) err
 	return err
 }
 
+func (m *MySQLRepository) DeletePost(ctx context.Context, id string, userId string) error {
+	_, err := m.db.ExecContext(ctx, "DELETE FROM posts WHERE id = ? AND user_id = ?", id, userId)
+	return err
+}
+
 func (m *MySQLRepository) Close() error {
 	return m.db.Close()
 }
