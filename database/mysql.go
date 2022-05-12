@@ -81,6 +81,26 @@ func (m *MySQLRepository) InsertPost(ctx context.Context, post *models.Post) err
 	return err
 }
 
+func (m *MySQLRepository) GetPostById(ctx context.Context, id string) (*models.Post, error) {
+	rows, err := m.db.QueryContext(ctx, "SELECT id, title, content, user_id, created_at FROM posts WHERE id = ?", id)
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+	var post models.Post
+	for rows.Next() {
+		if err = rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CreatedAt); err == nil {
+			return &post, nil
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
 func (m *MySQLRepository) Close() error {
 	return m.db.Close()
 }

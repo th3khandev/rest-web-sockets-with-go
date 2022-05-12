@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 	"github.com/th3khan/rest-web-sockets-with-go/models"
 	"github.com/th3khan/rest-web-sockets-with-go/repositories"
@@ -68,5 +69,17 @@ func InsertPostHandler(s server.Server) http.HandlerFunc {
 		} else {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 		}
+	}
+}
+
+func GetPostByIdHandler(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		post, err := repositories.GetPostById(r.Context(), params["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(post)
 	}
 }
