@@ -13,7 +13,7 @@ import (
 	"github.com/th3khan/rest-web-sockets-with-go/server"
 )
 
-type InsertPostRequest struct {
+type UpsertPostRequest struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
@@ -36,7 +36,7 @@ func InsertPostHandler(s server.Server) http.HandlerFunc {
 			return
 		}
 		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
-			var postRequest InsertPostRequest
+			var postRequest UpsertPostRequest
 			if err := json.NewDecoder(r.Body).Decode(&postRequest); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
@@ -81,5 +81,53 @@ func GetPostByIdHandler(s server.Server) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(post)
+	}
+}
+
+func UpdatePostHandler(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenString := strings.TrimSpace(r.Header.Get("Authorization"))
+		token, err := jwt.ParseWithClaims(tokenString, &models.AppClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(s.Config().JWTSecret), nil
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
+			var postRequest UpsertPostRequest
+			if err := json.NewDecoder(r.Body).Decode(&postRequest); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			params := mux.Vars(r)
+			id := params["id"]
+			if id == "" {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			post := models.Post{
+				ID:      id,
+				UserID:  claims.UserID,
+				Title:   postRequest.Title,
+				Content: postRequest.Content,
+			}
+			err = repositories.UpdatePost(r.Context(), &post)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "application/json")
+			postResponse := PostResponse{
+				ID:      post.ID,
+				UserID:  post.UserID,
+				Title:   post.Title,
+				Content: post.Content,
+			}
+			json.NewEncoder(w).Encode(postResponse)
+		} else {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+		}
 	}
 }

@@ -101,6 +101,11 @@ func (m *MySQLRepository) GetPostById(ctx context.Context, id string) (*models.P
 	return &post, nil
 }
 
+func (m *MySQLRepository) UpdatePost(ctx context.Context, post *models.Post) error {
+	_, err := m.db.ExecContext(ctx, "UPDATE posts SET title = ?, content = ? WHERE id = ? AND user_id = ?", post.Title, post.Content, post.ID, post.UserID)
+	return err
+}
+
 func (m *MySQLRepository) Close() error {
 	return m.db.Close()
 }
