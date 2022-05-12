@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -109,6 +110,31 @@ func (m *MySQLRepository) UpdatePost(ctx context.Context, post *models.Post) err
 func (m *MySQLRepository) DeletePost(ctx context.Context, id string, userId string) error {
 	_, err := m.db.ExecContext(ctx, "DELETE FROM posts WHERE id = ? AND user_id = ?", id, userId)
 	return err
+}
+
+func (m *MySQLRepository) ListPosts(ctx context.Context, page uint64) ([]*models.Post, error) {
+	rows, err := m.db.QueryContext(ctx, "SELECT id, title, content, user_id, created_at FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?", 2, page*2)
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+	if err != nil {
+		return nil, err
+	}
+	var posts []*models.Post
+	for rows.Next() {
+		var post = models.Post{}
+		if err = rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.CreatedAt); err == nil {
+			posts = append(posts, &post)
+		}
+	}
+	fmt.Println(posts)
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return posts, nil
 }
 
 func (m *MySQLRepository) Close() error {
