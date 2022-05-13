@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/th3khan/rest-web-sockets-with-go/database"
 	"github.com/th3khan/rest-web-sockets-with-go/repositories"
+	"github.com/th3khan/rest-web-sockets-with-go/websocket"
 )
 
 type Config struct {
@@ -19,11 +20,13 @@ type Config struct {
 
 type Server interface {
 	Config() *Config
+	Hub() *websocket.Hub
 }
 
 type Broker struct {
 	config *Config
 	router *mux.Router
+	hub    *websocket.Hub
 }
 
 func (b *Broker) Config() *Config {
@@ -43,6 +46,7 @@ func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 	broker := &Broker{
 		config: config,
 		router: mux.NewRouter(),
+		hub:    websocket.NewHub(),
 	}
 	return broker, nil
 }
@@ -55,7 +59,7 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	if err != nil {
 		log.Fatal("Error", err)
 	}
-
+	go b.hub.Run()
 	repositories.SetRepository(repo)
 
 	log.Println("Starting server on Port", b.config.Port)
@@ -63,4 +67,8 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	if err := http.ListenAndServe(b.config.Port, b.router); err != nil {
 		log.Fatal("ListenAndServer: ", err)
 	}
+}
+
+func (b *Broker) Hub() *websocket.Hub {
+	return b.hub
 }
