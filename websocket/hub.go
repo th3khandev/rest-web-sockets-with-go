@@ -43,6 +43,17 @@ func (hub *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go client.Write()
 }
 
+func (hub *Hub) run() {
+	for {
+		select {
+		case client := <-hub.register:
+			hub.onConnect(client)
+		case client := <-hub.unregister:
+			hub.onDisconnect(client)
+		}
+	}
+}
+
 func (hub *Hub) onConnect(client *Client) {
 	log.Println("New Client connected", client.socket.RemoteAddr())
 
