@@ -43,7 +43,7 @@ func (hub *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	go client.Write()
 }
 
-func (hub *Hub) run() {
+func (hub *Hub) Run() {
 	for {
 		select {
 		case client := <-hub.register:
