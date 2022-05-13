@@ -42,3 +42,31 @@ func (hub *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	go client.Write()
 }
+
+func (hub *Hub) onConnect(client *Client) {
+	log.Println("New Client connected", client.socket.RemoteAddr())
+
+	hub.mutex.Lock()
+	defer hub.mutex.Unlock()
+	client.id = client.socket.RemoteAddr().String()
+	hub.clients = append(hub.clients, client)
+}
+
+func (hub *Hub) onDisconnect(client *Client) {
+	log.Println("Client disconnected", client.socket.RemoteAddr())
+	client.socket.Close()
+	hub.mutex.Lock()
+	defer hub.mutex.Unlock()
+
+	i := -1
+	for j, c := range hub.clients {
+		if c.id == client.id {
+			i = j
+			break
+		}
+	}
+
+	copy(hub.clients[i:], hub.clients[i+1:])
+	hub.clients[len(hub.clients)-1] = nil
+	hub.clients = hub.clients[:len(hub.clients)-1]
+}
