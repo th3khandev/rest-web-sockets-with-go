@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"github.com/th3khan/rest-web-sockets-with-go/database"
 	"github.com/th3khan/rest-web-sockets-with-go/repositories"
 	"github.com/th3khan/rest-web-sockets-with-go/websocket"
@@ -55,6 +56,8 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	b.router = mux.NewRouter()
 	binder(b, b.router)
 
+	handler := cors.Default().Handler(b.router)
+
 	repo, err := database.NewMySQLRepository(b.config.DataBaseUrl)
 	if err != nil {
 		log.Fatal("Error", err)
@@ -64,7 +67,7 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 
 	log.Println("Starting server on Port", b.config.Port)
 
-	if err := http.ListenAndServe(b.config.Port, b.router); err != nil {
+	if err := http.ListenAndServe(b.config.Port, handler); err != nil {
 		log.Fatal("ListenAndServer: ", err)
 	}
 }
